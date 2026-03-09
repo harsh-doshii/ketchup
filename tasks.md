@@ -7,34 +7,22 @@
 
 ## Phase 0 — Project Setup
 
-- [ ] **0.1** Create GitHub repo (`ketchup`)
-- [ ] **0.2** Scaffold Vite + React + TypeScript project: `npm create vite@latest ketchup -- --template react-ts`
-- [ ] **0.3** Install and configure Tailwind CSS v3
-- [ ] **0.4** Install and initialize shadcn/ui (`npx shadcn-ui@latest init`)
-- [ ] **0.5** Install core dependencies:
+- [ ] **0.1** Create GitHub repo (`ketchup`) ← **YOU**
+- [x] **0.2** Scaffold Vite + React + TypeScript project: `npm create vite@latest ketchup -- --template react-ts`
+- [x] **0.3** Install and configure Tailwind CSS v3
+- [x] **0.4** Install and initialize shadcn/ui (manually configured `components.json` + CSS vars)
+- [x] **0.5** Install core dependencies:
   - `react-router-dom` v6
   - `@tanstack/react-query`
   - `zustand`
   - `luxon` + `@types/luxon`
   - `@supabase/supabase-js`
-- [ ] **0.6** Set up ESLint + Prettier with recommended config
-- [ ] **0.7** Set up Vitest for unit testing
-- [ ] **0.8** Create `.env.local` with placeholder Supabase keys
-- [ ] **0.9** Create base folder structure:
-  ```
-  src/
-    components/   # shared + feature components
-    pages/        # route-level pages
-    lib/          # supabase client, timezone utils
-    hooks/        # custom React hooks
-    store/        # Zustand stores
-    types/        # TypeScript types & DB types
-  supabase/
-    migrations/   # SQL migration files
-    functions/    # Edge functions
-  ```
-- [ ] **0.10** Configure path aliases (`@/` → `src/`) in `vite.config.ts` and `tsconfig.json`
-- [ ] **0.11** Push initial scaffold to GitHub
+- [x] **0.6** Set up ESLint + Prettier with recommended config
+- [x] **0.7** Set up Vitest for unit testing
+- [x] **0.8** Create `.env.local` with placeholder Supabase keys
+- [x] **0.9** Create base folder structure (`components`, `pages`, `lib`, `hooks`, `store`, `types`, `test`)
+- [x] **0.10** Configure path aliases (`@/` → `src/`) in `vite.config.ts` and `tsconfig.app.json`
+- [ ] **0.11** Push initial scaffold to GitHub ← **YOU** (after completing 0.1)
 
 ---
 
