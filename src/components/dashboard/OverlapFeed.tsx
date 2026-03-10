@@ -1,4 +1,3 @@
-import { useState } from 'react'
 import { DateTime } from 'luxon'
 import { DualTimeLabel } from '@/components/DualTimeLabel'
 import type { WindowWithContact } from '@/hooks/useOverlapWindows'
