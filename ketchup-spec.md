@@ -1,5 +1,5 @@
 # Ketchup — Technical Specification
-> A personal scheduling tool for staying connected across IST and PST timezones.
+> A personal scheduling tool for staying connected across IST and ET timezones.
 
 ---
 
@@ -24,11 +24,11 @@
 
 ## 1. Project Overview
 
-**Ketchup** is a personal web app built for one owner (you) to coordinate calls with friends and family in India. It solves the specific pain point of finding overlapping free time between PST (your timezone) and IST (your contacts' timezone), which are ~13.5 hours apart.
+**Ketchup** is a personal web app built for one owner (you) to coordinate calls with friends and family in India. It solves the specific pain point of finding overlapping free time between ET (your timezone) and IST (your contacts' timezone), which are ~9.5–10.5 hours apart (EDT/EST).
 
 Unlike generic scheduling tools (Calendly, Doodle), Ketchup is:
 - **Relationship-first**: Built around named, persistent contacts and groups, not anonymous meeting slots.
-- **Dual-timezone native**: Every UI element shows both IST and PST simultaneously.
+- **Dual-timezone native**: Every UI element shows both IST and ET simultaneously.
 - **Zero friction for guests**: Contacts open a link, tap their availability, and done — no account, no install.
 - **Personal dashboard**: You see all your contacts' availability and overlap windows in one place.
 
@@ -39,7 +39,7 @@ Unlike generic scheduling tools (Calendly, Doodle), Ketchup is:
 ### In Scope (MVP)
 - Owner authentication (single user — you)
 - Contact management (add, name, group)
-- Owner sets their own weekly recurring availability in PST
+- Owner sets their own weekly recurring availability in ET
 - Shareable per-contact availability submission link (no login for guest)
 - Guest availability submission UI in IST
 - Overlap calculation engine
@@ -62,7 +62,7 @@ Unlike generic scheduling tools (Calendly, Doodle), Ketchup is:
 ### Role 1: Owner (You)
 
 1. Log in to your dashboard.
-2. Set your weekly recurring availability (e.g., "Mon–Fri after 6pm PST, Sat–Sun 9am–12pm PST").
+2. Set your weekly recurring availability (e.g., "Mon–Fri after 6pm ET, Sat–Sun 9am–12pm ET").
 3. Add a contact: enter their name, optional phone, assign to a group.
 4. Copy their unique availability link and send it over WhatsApp.
 5. View dashboard: see which contacts have submitted availability, see overlap windows.
@@ -87,10 +87,10 @@ Unlike generic scheduling tools (Calendly, Doodle), Ketchup is:
 - Session persisted via JWT stored in `httpOnly` cookie or Supabase session.
 
 ### F2 — Owner Availability Setup
-- Owner sets a **weekly recurring availability template** in PST.
+- Owner sets a **weekly recurring availability template** in ET.
 - UI: a 7-day × 24-hour grid (shown as 6am–midnight for usability).
 - Slots are 30-minute blocks. Owner clicks to toggle free/busy.
-- Availability is stored as a list of `{ dayOfWeek, startTime, endTime }` records in PST.
+- Availability is stored as a list of `{ dayOfWeek, startTime, endTime }` records in ET.
 - Owner can update availability at any time; changes immediately affect overlap calculations.
 
 ### F3 — Contact Management
@@ -112,31 +112,31 @@ Unlike generic scheduling tools (Calendly, Doodle), Ketchup is:
 ### F5 — Overlap Engine
 - Runs server-side (or in an edge function) when the dashboard loads or on-demand.
 - Logic:
-  1. Fetch owner's PST availability template. Convert all slots to UTC.
+  1. Fetch owner's ET availability template. Convert all slots to UTC.
   2. Fetch contact's IST availability. Convert all slots to UTC.
   3. Find intersecting UTC windows.
-  4. Re-display results in both PST (for owner) and IST (for contact).
+  4. Re-display results in both ET (for owner) and IST (for contact).
 - Results are sorted by soonest upcoming occurrence.
 - For groups: find windows where the owner + **all** (or configurable: **≥ N**) group members overlap.
 
 ### F6 — Dashboard
-- **My Week**: Shows the current week's PST availability for the owner.
+- **My Week: Shows the current week's ET availability for the owner.
 - **Contacts Panel**: List of all contacts with:
   - Online status indicator (has submitted availability: green; not yet: grey).
   - Last called date + "X days ago" relative label.
   - Quick link to copy their availability submission URL.
   - Overlap window count badge (e.g., "4 windows this week").
-- **Overlap Feed**: A chronological list of all upcoming overlap windows across all contacts, showing both PST and IST times.
+- **Overlap Feed**: A chronological list of all upcoming overlap windows across all contacts, showing both ET and IST times.
 - **Groups Tab**: Same overlap view but filtered per group.
 - **Nudge Banner**: Contacts you haven't called in > 14 days are surfaced at the top.
 
 ### F7 — Slot Confirmation & WhatsApp Copy
 - Owner clicks any overlap window.
 - A modal appears showing:
-  - The slot in PST (your time).
+  - The slot in ET (your time).
   - The slot in IST (their time).
   - Contact name.
-  - A pre-written WhatsApp message: *"Hey [Name]! Are you free [Day] at [IST time]? That's [PST time] for me 😊"*
+  - A pre-written WhatsApp message: *"Hey [Name]! Are you free [Day] at [IST time]? That's [ET time] for me 😊"*
 - One-click copy to clipboard.
 - Button to "Mark call as done" — updates `lastCalledAt` on the contact.
 
@@ -182,8 +182,8 @@ All models are stored in a **Supabase (PostgreSQL)** database.
 |---|---|---|
 | `id` | `uuid` | Primary key |
 | `day_of_week` | `integer` | 0=Sunday … 6=Saturday |
-| `start_time` | `time` | PST, e.g., `18:00` |
-| `end_time` | `time` | PST, e.g., `22:00` |
+| `start_time` | `time` | ET, e.g., `18:00` |
+| `end_time` | `time` | ET, e.g., `22:00` |
 | `updated_at` | `timestamptz` | |
 
 ### `contact_availability`
@@ -196,7 +196,7 @@ All models are stored in a **Supabase (PostgreSQL)** database.
 | `end_time` | `time` | IST, stored as UTC |
 | `updated_at` | `timestamptz` | |
 
-> **Storage convention**: All times are stored in UTC internally. Conversion to PST/IST happens at the application layer using `Luxon`.
+> **Storage convention**: All times are stored in UTC internally. Conversion to ET/IST happens at the application layer using `Luxon`.
 
 ### `call_log`
 | Column | Type | Notes |
@@ -272,7 +272,7 @@ All models are stored in a **Supabase (PostgreSQL)** database.
 │   │  Input: contact_id (or group_id)         │  │
 │   │  Logic: fetch both availabilities →      │  │
 │   │         convert to UTC → intersect →     │  │
-│   │         return sorted windows in PST/IST │  │
+│   │         return sorted windows in ET/IST │  │
 │   └──────────────────────────────────────────┘  │
 └─────────────────────────────────────────────────┘
 ```
@@ -304,7 +304,7 @@ All models are stored in a **Supabase (PostgreSQL)** database.
 #### `/availability/setup`
 - Owner's availability editor.
 - **Components**:
-  - `<WeeklyAvailabilityGrid />` — 7-day × 48-slot (30min) grid in PST.
+  - `<WeeklyAvailabilityGrid />` — 7-day × 48-slot (30min) grid in ET.
   - Toggle slots by clicking or dragging.
   - Save button writes to `owner_availability` table.
 
@@ -332,8 +332,8 @@ All models are stored in a **Supabase (PostgreSQL)** database.
   - `<TimezoneNote />` — Small note: "All times shown in IST (India Standard Time)".
 
 ### Shared Components
-- `<DualTimeLabel time={utcTime} />` — Always renders as "7:30am IST / 6:00pm PST (prev day)"
-- `<TimezoneClock />` — Live clock showing both IST and PST in the nav bar
+- `<DualTimeLabel time={utcTime} />` — Always renders as "7:30am IST / 6:00pm ET (prev day)"
+- `<TimezoneClock />` — Live clock showing both IST and ET in the nav bar
 - `<CopyButton text={...} />` — Clipboard copy with toast feedback
 - `<RelativeDate date={...} />` — "3 days ago", "2 weeks ago"
 
@@ -361,8 +361,8 @@ All data access goes through the **Supabase JS client** directly from the fronte
     {
       "startUtc": "2025-03-10T01:30:00Z",
       "endUtc": "2025-03-10T03:00:00Z",
-      "startPST": "Mon Mar 10, 5:30pm PST",
-      "endPST": "Mon Mar 10, 7:00pm PST",
+      "startET": "Mon Mar 10, 9:30am ET",
+      "endET": "Mon Mar 10, 11:00am ET",
       "startIST": "Tue Mar 11, 7:00am IST",
       "endIST": "Tue Mar 11, 8:30am IST",
       "durationMinutes": 90,
@@ -393,7 +393,7 @@ This is the most critical part of the app. All timezone math uses **Luxon**.
 
 ### Key Constants
 ```typescript
-const PST_ZONE = "America/Los_Angeles"; // handles PDT automatically
+const ET_ZONE = "America/New_York"; // handles EDT/EST automatically
 const IST_ZONE = "Asia/Kolkata";        // UTC+5:30, no DST
 ```
 
@@ -404,7 +404,7 @@ All times stored in the database are in **UTC**. The `day_of_week` + `start_time
 
 **Owner availability → UTC:**
 ```
-PST day + time → find next occurrence of that weekday → convert to UTC
+ET day + time → find next occurrence of that weekday → convert to UTC
 ```
 
 **Guest availability → UTC:**
@@ -414,15 +414,15 @@ IST day + time → find next occurrence of that weekday → convert to UTC
 
 **Overlap → Display:**
 ```
-UTC window → DateTime.setZone(PST_ZONE) → format for owner
+UTC window → DateTime.setZone(ET_ZONE) → format for owner
 UTC window → DateTime.setZone(IST_ZONE) → format for guest/contact
 ```
 
 ### Edge Cases to Handle
-- **Day boundary crossings**: 6pm PST Saturday = 7:30am IST Sunday. The UI must clearly label the day in both zones.
-- **PDT transitions**: Luxon handles this automatically when using `America/Los_Angeles`.
+- **Day boundary crossings**: 6pm ET Saturday = 4:30am IST Sunday. The UI must clearly label the day in both zones.
+- **EDT/EST transitions: Luxon handles this automatically when using `America/New_York``.
 - **The 30-minute offset**: IST is UTC+5:30, not a whole-hour offset. Ensure all slot grids use 30-minute increments.
-- **"Previous day" label**: When an IST morning slot corresponds to PST previous evening, display "(prev day)" clearly.
+- **"Previous day" label**: When an IST morning slot corresponds to ET previous evening, display "(prev day)" clearly.
 
 ---
 
@@ -468,9 +468,9 @@ SUPABASE_SERVICE_ROLE_KEY=...   # needed for edge function to bypass RLS
 - [ ] Supabase client setup with type generation (`supabase gen types`)
 
 ### Phase 2 — Owner Availability (Week 1–2)
-- [ ] Build `WeeklyAvailabilityGrid` component (PST, 30-min slots)
+- [ ] Build `WeeklyAvailabilityGrid` component (ET, 30-min slots)
 - [ ] Wire to `owner_availability` table (read + upsert)
-- [ ] Display live clock for PST and IST in nav
+- [ ] Display live clock for ET and IST in nav
 
 ### Phase 3 — Contacts (Week 2)
 - [ ] Build contact list page + `AddContactModal`

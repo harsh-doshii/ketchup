@@ -28,257 +28,165 @@
 
 ## Phase 1 — Supabase Backend Setup
 
-- [ ] **1.1** Create Supabase project on supabase.com
-- [ ] **1.2** Install Supabase CLI locally and link to project
-- [ ] **1.3** Write migration: create `contacts` table
-  ```sql
-  id uuid PK, name text, nickname text, phone text,
-  slug uuid UNIQUE DEFAULT gen_random_uuid(),
-  last_called_at timestamptz, is_deleted boolean DEFAULT false, created_at timestamptz DEFAULT now()
-  ```
-- [ ] **1.4** Write migration: create `groups` table
-  ```sql
-  id uuid PK, name text, created_at timestamptz DEFAULT now()
-  ```
-- [ ] **1.5** Write migration: create `contact_groups` join table
-  ```sql
-  contact_id uuid FK→contacts, group_id uuid FK→groups, PRIMARY KEY (contact_id, group_id)
-  ```
-- [ ] **1.6** Write migration: create `owner_availability` table
-  ```sql
-  id uuid PK, day_of_week integer (0–6), start_time time, end_time time, updated_at timestamptz
-  ```
-- [ ] **1.7** Write migration: create `contact_availability` table
-  ```sql
-  id uuid PK, contact_id uuid FK→contacts,
-  day_of_week integer, start_time time, end_time time, updated_at timestamptz
-  ```
-- [ ] **1.8** Write migration: create `call_log` table
-  ```sql
-  id uuid PK, contact_id uuid FK→contacts, called_at timestamptz, notes text
-  ```
-- [ ] **1.9** Apply all migrations: `supabase db push`
-- [ ] **1.10** Configure Row Level Security (RLS):
-  - `contacts`: SELECT/INSERT/UPDATE/DELETE for authenticated owner only
-  - `groups`: SELECT/INSERT/UPDATE/DELETE for authenticated owner only
-  - `contact_groups`: SELECT/INSERT/DELETE for authenticated owner only
-  - `owner_availability`: SELECT/INSERT/UPDATE/DELETE for authenticated owner only
-  - `call_log`: SELECT/INSERT for authenticated owner only
-  - `contact_availability`: SELECT/INSERT/UPDATE for **anon** (public), scoped so contact can only write rows matching their contact_id (looked up via slug)
-- [ ] **1.11** Generate TypeScript types: `supabase gen types typescript --local > src/types/supabase.ts`
-- [ ] **1.12** Create Supabase client singleton at `src/lib/supabase.ts`
-- [ ] **1.13** Manually seed the owner account via Supabase Auth dashboard (email + password)
+- [ ] **1.1** Create Supabase project on supabase.com ← **YOU**
+- [ ] **1.2** Install Supabase CLI locally and link to project ← **YOU**
+- [x] **1.3** Write migration: create `contacts` table
+- [x] **1.4** Write migration: create `groups` table
+- [x] **1.5** Write migration: create `contact_groups` join table
+- [x] **1.6** Write migration: create `owner_availability` table
+- [x] **1.7** Write migration: create `contact_availability` table
+- [x] **1.8** Write migration: create `call_log` table
+- [ ] **1.9** Apply all migrations: `supabase db push` ← **YOU**
+- [x] **1.10** Configure Row Level Security (RLS) — written in migration `20260101000007_rls_policies.sql`
+- [ ] **1.11** Generate TypeScript types: `supabase gen types typescript --linked > src/types/supabase.ts` ← **YOU** (after 1.9)
+- [x] **1.12** Create Supabase client singleton at `src/lib/supabase.ts`
+- [ ] **1.13** Seed owner account via Supabase Auth dashboard (Authentication → Add user) ← **YOU**
 
 ---
 
 ## Phase 2 — Auth & Routing Shell
 
-- [ ] **2.1** Set up React Router v6 in `main.tsx` with routes:
-  - `/` → redirect logic
-  - `/login`
-  - `/dashboard`
-  - `/availability/setup`
-  - `/contacts`
-  - `/contacts/:id`
-  - `/availability/:slug` (public)
-- [ ] **2.2** Create `AuthProvider` context using `supabase.auth.getSession()` + `onAuthStateChange`
-- [ ] **2.3** Create `ProtectedRoute` wrapper — redirects to `/login` if no session
-- [ ] **2.4** Build `/login` page:
-  - Email + password form (shadcn `Input`, `Button`)
-  - Calls `supabase.auth.signInWithPassword()`
-  - Shows error toast on failure
-  - Redirects to `/dashboard` on success
-- [ ] **2.5** Add sign-out button in nav (calls `supabase.auth.signOut()`)
-- [ ] **2.6** Build app shell layout: `<Navbar />` + `<Outlet />` for protected pages
-- [ ] **2.7** Add `<TimezoneClock />` to navbar — live clock showing current IST and PST, updates every minute
+- [x] **2.1** Set up React Router v6 in `App.tsx` with all routes
+- [x] **2.2** Create `AuthProvider` context (`src/lib/auth.tsx`) using `supabase.auth.getSession()` + `onAuthStateChange`
+- [x] **2.3** Create `ProtectedRoute` wrapper — redirects to `/login` if no session
+- [x] **2.4** Build `/login` page — email + password form, error display, redirects on success
+- [x] **2.5** Add sign-out button in `<Navbar />`
+- [x] **2.6** Build app shell layout: `<AppLayout />` with `<Navbar />` + `<Outlet />`
+- [x] **2.7** Add `<TimezoneClock />` to navbar — live ET + IST clock, updates every minute
 
 ---
 
 ## Phase 3 — Timezone Utilities
 
-- [ ] **3.1** Create `src/lib/timezone.ts` with constants:
-  ```typescript
-  PST_ZONE = "America/Los_Angeles"
-  IST_ZONE = "Asia/Kolkata"
-  ```
-- [ ] **3.2** Write utility: `toPST(utcDate)` → Luxon DateTime in PST
-- [ ] **3.3** Write utility: `toIST(utcDate)` → Luxon DateTime in IST
-- [ ] **3.4** Write utility: `slotToUTC(dayOfWeek, time, zone)` → converts recurring weekly slot to UTC
-- [ ] **3.5** Write utility: `formatDualTime(utcDate)` → returns `{ pst: string, ist: string }` formatted strings
-- [ ] **3.6** Write utility: `getDayLabel(pstDay, istDay)` → handles "(prev day)" / "(next day)" annotations
-- [ ] **3.7** Write Vitest unit tests for all timezone utilities:
-  - Test 30-min IST offset (UTC+5:30)
-  - Test PDT vs PST transitions
-  - Test day-boundary crossings (6pm PST Sat = 7:30am IST Sun)
-  - Test `(prev day)` label logic
+- [x] **3.1** Create `src/lib/timezone.ts` with `ET_ZONE` + `IST_ZONE` constants
+- [x] **3.2** Write utility: `toET(dt)` → Luxon DateTime in ET
+- [x] **3.3** Write utility: `toIST(dt)` → Luxon DateTime in IST
+- [x] **3.4** Write utility: `slotToUTC(dayOfWeek, timeStr, zone)` → next UTC occurrence of a recurring slot
+- [x] **3.5** Write utility: `formatDualTime(utcDt)` → `{ et, ist, etDay, istDay, dayDiff }`
+- [x] **3.6** Write utility: `getDayDiffLabel(etDt, istDt)` → "(next day)" / "(prev day)" / ""
+- [x] **3.7** Write Vitest unit tests — 19/19 passing:
+  - 30-min IST offset (UTC+5:30)
+  - EDT vs EST transitions
+  - Day-boundary crossings (6pm ET Sat = 4:30am IST Sun)
+  - `(prev day)` / `(next day)` label logic
+  - `relativeDate` formatting
 
 ---
 
 ## Phase 4 — Owner Availability Setup
 
-- [ ] **4.1** Build `<WeeklyAvailabilityGrid />` component:
-  - 7 columns (Sun–Sat), rows for 30-min slots from 6:00am–midnight PST (36 slots × 7 = 252 cells)
-  - Click to toggle slot free/busy (highlighted vs grey)
-  - Support click-drag to select multiple slots
-  - Displays PST time labels on the left axis
-- [ ] **4.2** Build `/availability/setup` page:
-  - Loads existing `owner_availability` rows and pre-fills grid
-  - "Save" button upserts all toggled slots to `owner_availability` table
-  - Shows success toast on save
-- [ ] **4.3** Create React Query hook `useOwnerAvailability()` — fetch + upsert `owner_availability`
-- [ ] **4.4** Create Zustand store slice for local grid state (pending unsaved changes)
+- [x] **4.1** Build `<WeeklyAvailabilityGrid />` — 7×36 grid (Sun–Sat, 6am–midnight ET, 30-min slots), click + drag to toggle
+- [x] **4.2** Build `/availability/setup` page — loads from DB, pre-fills grid, save button with unsaved-changes indicator
+- [x] **4.3** Create `useOwnerAvailability()` + `useSaveOwnerAvailability()` React Query hooks
+- [x] **4.4** Create `useAvailabilityStore` Zustand store — slots state + unsaved changes detection
 
 ---
 
 ## Phase 5 — Contact Management
 
-- [ ] **5.1** Build `/contacts` page layout with contact list and sidebar
-- [ ] **5.2** Create React Query hook `useContacts()` — fetches all non-deleted contacts with group info
-- [ ] **5.3** Build `<ContactCard />` component:
-  - Displays name, nickname, group tags
-  - "Last called" relative date (or "Never")
-  - Availability status badge (green = submitted, grey = pending)
-  - Copy availability link button (copies `/availability/{slug}` URL)
-  - Edit + delete actions
-- [ ] **5.4** Build `<AddContactModal />` (shadcn `Dialog`):
-  - Fields: Name (required), Nickname, Phone, Group (multi-select)
-  - On submit: INSERT to `contacts`, then INSERT to `contact_groups`
-  - Auto-generates slug (DB default)
-- [ ] **5.5** Build `<EditContactModal />` — pre-fills form, UPDATE on submit
-- [ ] **5.6** Implement soft delete — sets `is_deleted = true`, contact disappears from list
-- [ ] **5.7** Build `<GroupManager />` panel:
-  - List all groups
-  - Create new group (INSERT to `groups`)
-  - Rename group
-  - Delete group (removes from `contact_groups` too)
-- [ ] **5.8** Build `<CopyButton />` shared component — copies text to clipboard, shows checkmark toast
-- [ ] **5.9** Create React Query hook `useGroups()` — fetch + create + delete groups
+- [x] **5.1** Build `/contacts` page — contact list + sidebar layout, loading skeletons, empty state
+- [x] **5.2** Create `useContacts()` hook — fetches non-deleted contacts with nested groups + availability status
+- [x] **5.3** Build `<ContactCard />` — name, nickname, group tags, availability dot, last-called, copy link, edit/delete
+- [x] **5.4** Build `<AddContactModal />` — name/nickname/phone/group form, inserts contact + group assignments
+- [x] **5.5** Build `<EditContactModal />` — pre-fills form, replaces group assignments on save
+- [x] **5.6** Soft delete — `useDeleteContact()` sets `is_deleted = true` with confirmation prompt
+- [x] **5.7** Build `<GroupManager />` sidebar — create, rename (inline), delete groups
+- [x] **5.8** Build `<CopyButton />` — clipboard copy with animated checkmark
+- [x] **5.9** Create `useGroups()` + `useCreateGroup()` + `useDeleteGroup()` + `useRenameGroup()` hooks
 
 ---
 
 ## Phase 6 — Guest Availability Page
 
-- [ ] **6.1** Build `/availability/:slug` page (no auth required):
-  - On mount: look up contact by slug via `supabase.from('contacts').select().eq('slug', slug).single()`
-  - If slug invalid: show "Link not found" error state
-- [ ] **6.2** Build `<GuestHeader />` — "Hi! Harsh wants to know when you're free to catch up 👋" with contact's name
-- [ ] **6.3** Build `<ISTWeeklyGrid />` component:
-  - Identical grid structure to `WeeklyAvailabilityGrid` but labeled in IST
-  - Time axis: 6:00am–midnight IST (30-min slots)
-  - Pre-fills existing `contact_availability` rows on return visit
-  - Click/drag to toggle slots
-- [ ] **6.4** Build `<TimezoneNote />` — small footer note: "All times shown in IST (India Standard Time)"
-- [ ] **6.5** Build submit logic:
-  - On "Submit": upsert all selected slots to `contact_availability` for this `contact_id`
-  - Show success state ("Thanks! We'll find a good time 🎉")
-  - `updated_at` timestamp recorded automatically
-- [ ] **6.6** Create React Query hook `useContactAvailability(contactId)` — public fetch + upsert
-- [ ] **6.7** Test full guest flow: open link in incognito → select slots → submit → re-open → slots pre-filled
+- [x] **6.1** Build `/availability/:slug` page — slug lookup, loading state, "Link not found" error state
+- [x] **6.2** Build guest header — "Hey [name]! Harsh wants to catch up 👋"
+- [x] **6.3** Reused `<WeeklyAvailabilityGrid />` with `timezoneLabel="IST"` prop, pre-fills on return visit
+- [x] **6.4** IST timezone banner — "All times are in IST (India Standard Time)"
+- [x] **6.5** Submit logic — delete-all + insert, success state with update link
+- [x] **6.6** `useContactBySlug`, `useContactAvailability`, `useSaveContactAvailability` hooks (all public/anon)
+- [ ] **6.7** Test full guest flow: open link in incognito → select slots → submit → re-open → slots pre-filled ← **YOU**
 
 ---
 
 ## Phase 7 — Overlap Engine (Edge Function)
 
-- [ ] **7.1** Scaffold Supabase Edge Function: `supabase functions new overlap`
-- [ ] **7.2** Implement overlap algorithm in `supabase/functions/overlap/index.ts`:
-  1. Parse request body: `{ type: "contact" | "group", id: uuid, weeksAhead: number }`
-  2. Fetch owner's `owner_availability` slots (all rows)
-  3. If `type === "contact"`: fetch that contact's `contact_availability`
-  4. If `type === "group"`: fetch all contacts in group + their availability
-  5. Expand recurring weekly patterns into concrete UTC datetime ranges for `weeksAhead` weeks
-  6. Find intersecting UTC windows (owner ∩ contact, or owner ∩ all-group-members)
-  7. For group: support "all members must overlap" logic
-  8. Sort windows by `startUtc` ascending
-  9. Format each window with `startPST`, `endPST`, `startIST`, `endIST` strings
-  10. Return JSON response
-- [ ] **7.3** Handle edge cases in overlap logic:
-  - Day boundary crossings (IST day ≠ PST day)
-  - PDT/PST transitions (Luxon handles automatically)
-  - IST 30-min offset
-  - Empty availability (return empty windows array)
-- [ ] **7.4** Write Vitest unit tests for the overlap algorithm (import logic separately from Deno handler)
-- [ ] **7.5** Deploy edge function: `supabase functions deploy overlap`
-- [ ] **7.6** Create `src/lib/overlapApi.ts` — typed wrapper to call the edge function from React
+- [x] **7.1** Edge function scaffolded at `supabase/functions/overlap/index.ts`
+- [x] **7.2** Overlap algorithm implemented — contact + group modes, expand slots → UTC → intersect → format
+- [x] **7.3** Edge cases handled: day boundaries, EDT/EST via Luxon, IST 30-min offset, empty arrays
+- [x] **7.4** Vitest unit tests in `src/lib/overlapAlgorithm.ts` — **22 tests, all passing** (41 total)
+- [x] **7.5** Deploy edge function: `supabase functions deploy overlap --no-verify-jwt` ← **YOU** ✓
+- [x] **7.6** `src/lib/overlapApi.ts` — typed `fetchOverlapWindows()` wrapper using `supabase.functions.invoke()`
 
 ---
 
 ## Phase 8 — Dashboard
 
-- [ ] **8.1** Build `/dashboard` page layout (sidebar + main content area)
-- [ ] **8.2** Build `<OverlapFeed />` component:
+- [x] **8.1** Build `/dashboard` page layout (sidebar + main content area)
+- [x] **8.2** Build `<OverlapFeed />` component:
   - Calls overlap edge function for all contacts
   - Chronological list of upcoming windows
-  - Each row: dual time label (PST + IST), contact name, duration badge
+  - Each row: dual time label (ET + IST), contact name, duration badge
   - Clicking a row opens `<SlotConfirmModal />`
-- [ ] **8.3** Build `<DualTimeLabel />` shared component:
-  - Renders `"Mon 7:30am IST / Sun 6:00pm PST (prev day)"` format
+- [x] **8.3** Build `<DualTimeLabel />` shared component:
+  - Renders `"Mon 7:30am IST / Sun 6:00pm ET (prev day)"` format
   - Accepts UTC datetime prop
-- [ ] **8.4** Build `<NudgeBanner />`:
+- [x] **8.4** Build `<NudgeBanner />`:
   - Fetches contacts where `last_called_at < now() - 14 days` (or null)
   - Shows strip at top: "You haven't called [Name] in 18 days"
   - Sorted by most overdue first
-- [ ] **8.5** Build `<ContactList />` dashboard widget:
+- [x] **8.5** Build `<ContactList />` dashboard widget:
   - Compact version of contact cards
   - Status badge, last-called label, overlap count badge
   - Sort by "most overdue" toggle
-- [ ] **8.6** Build `<GroupTabs />` — tab bar to filter `<OverlapFeed />` by group (or "All")
-- [ ] **8.7** Build `<OwnerAvailabilityMiniView />` — compressed read-only view of owner's set availability
-- [ ] **8.8** Build `<WeekStrip />` — horizontal strip showing current week dates, today highlighted
+- [x] **8.6** Build `<GroupTabs />` — tab bar to filter `<OverlapFeed />` by group (or "All")
+- [x] **8.7** Build `<OwnerAvailabilityMiniView />` — compressed read-only view of owner's set availability
+- [x] **8.8** Build `<WeekStrip />` — horizontal strip showing current week dates, today highlighted
 
 ---
 
 ## Phase 9 — Slot Confirmation & Call Logging
 
-- [ ] **9.1** Build `<SlotConfirmModal />` (shadcn `Dialog`):
-  - Shows selected window: PST time, IST time, contact name
-  - Pre-written WhatsApp message: *"Hey [Name]! Are you free [Day] at [IST time]? That's [PST time] for me 😊"*
+- [x] **9.1** Build `<SlotConfirmModal />` (shadcn `Dialog`):
+  - Shows selected window: ET time, IST time, contact name
+  - Pre-written WhatsApp message: *"Hey [Name]! Are you free [Day] at [IST time]? That's [ET time] for me 😊"*
   - `<CopyButton />` for one-click clipboard copy
   - "Mark call as done" button
-- [ ] **9.2** Implement "Mark call as done":
+- [x] **9.2** Implement "Mark call as done":
   - INSERT row to `call_log` with `called_at = now()`
   - UPDATE `contacts.last_called_at = now()` for that contact
   - Close modal + show success toast + refetch contacts
-- [ ] **9.3** Build `/contacts/:id` detail page:
-  - `<ContactAvailabilityView />` — their submitted IST grid (read-only overlay)
-  - `<OverlapWindowList />` — overlap windows specific to this contact (calls edge function)
-  - `<CallLogTimeline />` — list of past `call_log` entries with dates and notes
-- [ ] **9.4** Build `<RelativeDate />` shared component — "3 days ago", "2 weeks ago", "Never"
-- [ ] **9.5** Create React Query hook `useCallLog(contactId)` — fetch call history
+- [x] **9.3** Build `/contacts/:id` detail page:
+  - Contact availability grid (IST, read-only)
+  - Overlap windows for this contact (clicks open SlotConfirmModal)
+  - Call log timeline with dates and relative labels
+- [x] **9.4** Build `<RelativeDate />` shared component — "3 days ago", "2 weeks ago", "Never"
+- [x] **9.5** Create React Query hook `useCallLog(contactId)` — fetch call history
 
 ---
 
 ## Phase 10 — Polish & UX
 
-- [ ] **10.1** Add loading skeletons (shadcn `Skeleton`) to all data-fetching components
-- [ ] **10.2** Add empty states (no contacts, no availability set, no overlap windows)
-- [ ] **10.3** Add error states with retry buttons for failed queries
-- [ ] **10.4** Implement toast notifications (shadcn `Sonner` or `Toast`) for all actions
-- [ ] **10.5** Make guest page (`/availability/:slug`) fully mobile-responsive (touch-friendly grid)
-- [ ] **10.6** Make dashboard responsive for tablet/desktop (no mobile dashboard requirement)
-- [ ] **10.7** Add `<head>` meta tags: title, description, og:image for sharing
-- [ ] **10.8** Audit and finalize all "prev day" / "next day" labels in dual time displays
-- [ ] **10.9** Add keyboard shortcuts: `Escape` closes modals, etc.
-- [ ] **10.10** Accessibility pass: ARIA labels, focus management in modals, color contrast check
+- [x] **10.1** Add loading skeletons to all data-fetching components
+- [x] **10.2** Add empty states (no contacts, no availability set, no overlap windows)
+- [x] **10.3** Add error states with retry buttons for failed queries
+- [x] **10.4** Toast notifications via sonner for all mutations (add/edit/delete contact, save availability, mark call done, guest submit)
+- [x] **10.5** Guest page fully mobile-responsive: touch drag-to-select on availability grid (touchstart/touchmove via elementFromPoint), Toaster added to guest page
+- [x] **10.6** Contacts page sidebar goes full-width on mobile; dashboard uses lg:grid-cols-3; AppLayout has px-4
+- [x] **10.7** index.html: title, description, og:title, og:description, og:type, theme-color
+- [x] **10.8** "prev day"/"next day" labels correct in timezone.ts and DualTimeLabel
+- [x] **10.9** Escape closes modals (Radix Dialog handles natively)
+- [x] **10.10** ARIA labels on icon buttons; Radix Dialog handles focus trapping; active nav link highlighted
 
 ---
 
 ## Phase 11 — Testing
 
-- [ ] **11.1** Unit tests — timezone utilities (`src/lib/timezone.test.ts`):
-  - All conversion functions
-  - Day-boundary edge cases
-  - PDT transition cases
-- [ ] **11.2** Unit tests — overlap algorithm (`supabase/functions/overlap/overlap.test.ts`):
-  - Basic overlap
-  - No overlap
-  - Group overlap (all members required)
-  - Multi-week expansion
-  - Day-boundary overlap
-- [ ] **11.3** Component smoke tests (Vitest + React Testing Library):
-  - `<WeeklyAvailabilityGrid />` renders correct slot count
-  - `<ISTWeeklyGrid />` pre-fills correctly
-  - `<DualTimeLabel />` renders correct strings
-- [ ] **11.4** Manual end-to-end test checklist:
+- [x] **11.1** Unit tests — timezone utilities (`src/lib/timezone.test.ts`) — **19 tests passing**
+- [x] **11.2** Unit tests — overlap algorithm (`src/lib/overlapAlgorithm.test.ts`) — **22 tests passing**
+- [x] **11.3** Component smoke tests (Vitest + React Testing Library) — **15 tests passing**:
+  - `<WeeklyAvailabilityGrid />`: 7 headers, 252 cells, pre-fill, click, deselect, readonly, touch hint
+  - `<DualTimeLabel />`: IST/ET times, "(next day)", same-day no-label, day names
+- [x] **11.4** Manual end-to-end test checklist ← **YOU** ✓:
   - [ ] Owner login → dashboard loads
   - [ ] Set availability → saves → reloads correctly
   - [ ] Add contact → shareable link generated
