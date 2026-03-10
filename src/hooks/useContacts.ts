@@ -21,6 +21,17 @@ export interface Contact {
 
 const CONTACTS_KEY = ['contacts']
 
+function generateSlug(name: string): string {
+  const base = name
+    .toLowerCase()
+    .trim()
+    .replace(/[^a-z0-9\s]/g, '')
+    .replace(/\s+/g, '-')
+    .slice(0, 24)
+  const suffix = Math.random().toString(36).slice(2, 6)
+  return `${base}-${suffix}`
+}
+
 export function useContacts() {
   return useQuery({
     queryKey: CONTACTS_KEY,
@@ -64,7 +75,7 @@ export function useCreateContact() {
     }) => {
       const { data, error } = await supabase
         .from('contacts')
-        .insert({ name, nickname: nickname || null, phone: phone || null })
+        .insert({ name, nickname: nickname || null, phone: phone || null, slug: generateSlug(name) })
         .select('id')
         .single()
       if (error) throw error
